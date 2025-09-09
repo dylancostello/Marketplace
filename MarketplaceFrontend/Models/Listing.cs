@@ -12,6 +12,9 @@ namespace MarketplaceAPI.Models
         public string ImageUrl { get; set; } = "";
         public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
 
+        // Sold status
+        public bool IsSold { get; set; } = false;
+
         // Foreign key to User
         public Guid UserId { get; set; }
         public User User { get; set; }
@@ -26,6 +29,7 @@ namespace MarketplaceAPI.Models
         public string Category { get; set; } = "";
         public string ImageUrl { get; set; } = "";
         public DateTime CreatedAt { get; set; }
+        public bool IsSold { get; set; }
 
         public Guid UserId { get; set; }
         public string UserName { get; set; } = ""; // Include only the info you need
@@ -48,6 +52,7 @@ namespace MarketplaceAPI.Models
         public decimal Price { get; set; }
         public string Category { get; set; } = "";
         public string ImageUrl { get; set; } = "";
+        public bool IsSold { get; set; }
         public Guid UserId { get; set; }
     }
 }

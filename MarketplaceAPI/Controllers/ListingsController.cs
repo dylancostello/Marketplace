@@ -34,7 +34,8 @@ namespace MarketplaceAPI.Controllers
                     ImageUrl = l.ImageUrl,
                     CreatedAt = l.CreatedAt,
                     UserId = l.UserId,
-                    UserName = l.User.UserName
+                    UserName = l.User.UserName,
+                    IsSold = l.IsSold
                 })
                 .ToListAsync();
 
@@ -58,7 +59,8 @@ namespace MarketplaceAPI.Controllers
                     ImageUrl = l.ImageUrl,
                     CreatedAt = l.CreatedAt,
                     UserId = l.UserId,
-                    UserName = l.User.UserName
+                    UserName = l.User.UserName,
+                    IsSold = l.IsSold
                 })
                 .FirstOrDefaultAsync();
 
@@ -127,6 +129,7 @@ namespace MarketplaceAPI.Controllers
             listing.Price = dto.Price;
             listing.Category = dto.Category;
             listing.ImageUrl = dto.ImageUrl;
+            listing.IsSold = dto.IsSold;
 
             await _context.SaveChangesAsync();
             return NoContent();
@@ -173,12 +176,25 @@ namespace MarketplaceAPI.Controllers
                     Category = l.Category,
                     ImageUrl = l.ImageUrl,
                     CreatedAt = l.CreatedAt,
+                    IsSold = l.IsSold,
                     UserId = l.UserId,
                     UserName = l.User.UserName
                 })
                 .ToListAsync();
 
             return listings;
+        }
+
+        [HttpPatch("{id}/toggle-sold")]
+        public async Task<IActionResult> ToggleSold(Guid id)
+        {
+            var listing = await _context.Listings.FindAsync(id);
+            if (listing == null) return NotFound();
+
+            listing.IsSold = !listing.IsSold;
+            await _context.SaveChangesAsync();
+
+            return Ok(new { listing.Id, listing.IsSold });
         }
     }
 }
