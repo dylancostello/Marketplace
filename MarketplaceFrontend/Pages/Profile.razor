@@ -1,7 +1,5 @@
 ﻿@page "/profile"
 @using System.Security.Claims
-@using MarketplaceAPI.Models
-@using Microsoft.AspNetCore.Components.Authorization
 @inject HttpClient Http
 @inject AuthService AuthService
 @inject AuthenticationStateProvider AuthStateProvider
@@ -9,20 +7,12 @@
 @layout MainLayout
 
 <h3 class="mb-3">My Profile</h3>
-<h3>All Claims</h3>
-<ul>
-    @foreach (var claim in user?.Claims ?? Enumerable.Empty<Claim>())
-    {
-        <li>@claim.Type: @claim.Value</li>
-    }
-</ul>
 
 @if (user != null && user.Identity?.IsAuthenticated == true)
 {
     <div class="card mb-4 shadow-sm">
         <div class="card-body">
-            <p>
-                <strong>Username:</strong> @user.FindFirst("unique_name")?.Value</p>
+            <p><strong>Username:</strong> @user.FindFirst("unique_name")?.Value</p>
             <p><strong>Email:</strong> @user.FindFirst("email")?.Value</p>
         </div>
     </div>
@@ -54,7 +44,12 @@ else
                         <h5 class="card-title">@l.Title</h5>
                         <p class="card-text text-truncate">@l.Description</p>
                         <p class="card-text"><strong>Price:</strong> $@l.Price</p>
-                        <a class="btn btn-primary mt-auto" href="/listing/@l.Id">View Details</a>
+                        <div class="mt-auto d-flex justify-content-between">
+                            <a class="btn btn-primary" href="/listing/@l.Id">View Details</a>
+                            <button class="btn btn-danger mt-auto" @onclick="() =>DeleteListing(l.Id)">
+                                Delete
+                            </button>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -62,37 +57,78 @@ else
     </div>
 }
 
+@if (!string.IsNullOrEmpty(message))
+{
+    <div class="alert alert-danger mt-2">@message</div>
+}
+
 @code {
     private ClaimsPrincipal? user;
     private List<ListingResponseDto>? listings;
+    private string message = "";
 
     protected override async Task OnInitializedAsync()
     {
-        // Get the authenticated user from JWT
         var authState = await AuthStateProvider.GetAuthenticationStateAsync();
         user = authState.User;
 
         if (user == null || !user.Identity?.IsAuthenticated == true)
         {
-            // Not logged in, redirect to login
             Nav.NavigateTo("/login");
             return;
         }
 
-        // Fetch user's listings
-        var token = await AuthService.GetToken();
-        if (string.IsNullOrEmpty(token)) return;
+        await LoadListings();
+    }
 
-        Http.DefaultRequestHeaders.Authorization =
-            new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", token);
-
+    private async Task LoadListings()
+    {
         try
         {
+            var token = await AuthService.GetToken();
+            if (string.IsNullOrEmpty(token)) return;
+
+            Http.DefaultRequestHeaders.Authorization =
+                new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", token);
+
             listings = await Http.GetFromJsonAsync<List<ListingResponseDto>>("api/listings/user");
         }
         catch
         {
             listings = new List<ListingResponseDto>();
+            message = "Failed to load listings.";
         }
     }
+
+    private async Task DeleteListing(Guid listingId)
+    {
+        var confirm = await JSRuntime.InvokeAsync<bool>("confirm", $"Are you sure you want to delete listing {listingId}?");
+        if (!confirm) return;
+
+        try
+        {
+            var token = await AuthService.GetToken();
+            if (string.IsNullOrEmpty(token)) return;
+
+            Http.DefaultRequestHeaders.Authorization =
+                new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", token);
+
+            var response = await Http.DeleteAsync($"api/listings/{listingId}");
+            if (response.IsSuccessStatusCode)
+            {
+                // Remove from local list to update UI
+                listings.RemoveAll(l => l.Id == listingId);
+            }
+            else
+            {
+                message = "Failed to delete listing.";
+            }
+        }
+        catch
+        {
+            message = "An error occurred while deleting the listing.";
+        }
+    }
+
+    [Inject] private IJSRuntime JSRuntime { get; set; } = default!;
 }
