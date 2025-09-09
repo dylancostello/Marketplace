@@ -1,0 +1,21 @@
+﻿@page "/logout"
+@using MarketplaceFrontend.Authentication
+@inject AuthService AuthService
+@inject CustomAuthStateProvider CustomAuth
+@inject NavigationManager Nav
+
+<h3>Logging out...</h3>
+
+@code {
+    protected override async Task OnInitializedAsync()
+    {
+        // Remove token from local storage
+        await AuthService.Logout();
+
+        // Notify authentication state provider
+        CustomAuth.NotifyUserLogout();
+
+        // Navigate to homepage (or login page)
+        Nav.NavigateTo("/", forceLoad: true);
+    }
+}

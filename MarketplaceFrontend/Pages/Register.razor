@@ -1,0 +1,76 @@
+﻿@page "/register"
+@using MarketplaceAPI.Models
+@using MarketplaceFrontend.Authentication
+@using Microsoft.AspNetCore.Components.Forms
+@inject AuthService AuthService
+@inject NavigationManager Nav
+@inject CustomAuthStateProvider CustomAuth
+@layout MainLayout
+
+<div class="d-flex justify-content-center align-items-center vh-100">
+    <div class="card shadow-lg p-4" style="width: 400px; border-radius: 12px;">
+        <h3 class="text-center mb-4">Create Account</h3>
+
+        <EditForm Model="registerDto" OnValidSubmit="HandleRegister">
+            <DataAnnotationsValidator />
+            <ValidationSummary />
+
+            <div class="form-group mb-3">
+                <label for="username">Username</label>
+                <InputText id="username" class="form-control"
+                           @bind-Value="registerDto.UserName"
+                           placeholder="Choose a username" />
+            </div>
+
+            <div class="form-group mb-3">
+                <label for="email">Email</label>
+                <InputText id="email" class="form-control"
+                           @bind-Value="registerDto.Email"
+                           placeholder="Enter your email" />
+            </div>
+
+            <div class="form-group mb-3">
+                <label for="password">Password</label>
+                <InputText id="password" class="form-control"
+                           @bind-Value="registerDto.Password"
+                           type="password"
+                           placeholder="Create a password" />
+            </div>
+
+            <button class="btn btn-success w-100" type="submit">Register</button>
+        </EditForm>
+
+        @if (!string.IsNullOrEmpty(message))
+        {
+            <div class="alert alert-danger mt-3">@message</div>
+        }
+
+        <div class="text-center mt-3">
+            <span>Already have an account?</span>
+            <a href="/login"> Login here</a>
+        </div>
+    </div>
+</div>
+
+@code {
+    private UserRegisterDto registerDto = new();
+    private string message = "";
+
+    private async Task HandleRegister()
+    {
+        try
+        {
+            var result = await AuthService.Register(registerDto);
+
+            // ✅ Notify authentication provider with the token
+            CustomAuth.NotifyUserAuthentication(result.Token);
+
+            // ✅ Redirect to homepage
+            Nav.NavigateTo("/", forceLoad: true);
+        }
+        catch
+        {
+            message = "Registration failed. Please try again.";
+        }
+    }
+}

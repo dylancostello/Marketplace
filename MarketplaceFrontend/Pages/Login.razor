@@ -1,0 +1,66 @@
+﻿@page "/login"
+@inject AuthService AuthService
+@inject CustomAuthStateProvider AuthProvider
+@inject NavigationManager Nav
+@using MarketplaceAPI.Models
+@using Microsoft.AspNetCore.Components.Forms
+
+<div class="d-flex justify-content-center align-items-center vh-100">
+    <div class="card shadow-lg p-4" style="width: 400px; border-radius: 12px;">
+        <h3 class="text-center mb-4">Login</h3>
+
+        <EditForm Model="loginDto" OnValidSubmit="HandleLogin">
+            <DataAnnotationsValidator />
+            <ValidationSummary />
+
+            <div class="form-group mb-3">
+                <label for="email">Email</label>
+                <InputText id="email" class="form-control"
+                           @bind-Value="loginDto.Email"
+                           placeholder="Enter your email" />
+            </div>
+
+            <div class="form-group mb-3">
+                <label for="password">Password</label>
+                <InputText id="password" class="form-control"
+                           @bind-Value="loginDto.Password"
+                           type="password"
+                           placeholder="Enter your password" />
+            </div>
+
+            <button type="submit" class="btn btn-primary w-100">Login</button>
+        </EditForm>
+
+        @if (!string.IsNullOrEmpty(message))
+        {
+            <div class="alert alert-danger mt-3">@message</div>
+        }
+
+        <div class="text-center mt-3">
+            <span>Don't have an account?</span>
+            <a href="/register"> Register here</a>
+        </div>
+    </div>
+</div>
+
+@code {
+    private UserLoginDto loginDto = new();
+    private string message = "";
+
+    private async Task HandleLogin()
+    {
+        try
+        {
+            var token = await AuthService.Login(loginDto);
+
+            // Notify authentication state
+            AuthProvider.NotifyUserAuthentication(token);
+
+            Nav.NavigateTo("/"); // redirect after login
+        }
+        catch
+        {
+            message = "Login failed. Check your credentials.";
+        }
+    }
+}
