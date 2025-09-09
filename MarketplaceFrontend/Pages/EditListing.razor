@@ -1,0 +1,98 @@
+﻿@page "/listing/edit/{ListingId:guid}"
+@using MarketplaceAPI.Models
+@inject HttpClient Http
+@inject AuthService AuthService
+@inject NavigationManager Nav
+@inject IJSRuntime JSRuntime
+
+<h3>Edit Listing</h3>
+
+@if (listing == null)
+{
+    <p><em>Loading...</em></p>
+}
+else
+{
+    <EditForm Model="listing" OnValidSubmit="HandleEdit">
+        <DataAnnotationsValidator />
+        <ValidationSummary />
+
+        <div class="mb-2">
+            <label>Title</label>
+            <InputText class="form-control" @bind-Value="listing.Title" />
+        </div>
+
+        <div class="mb-2">
+            <label>Description</label>
+            <InputTextArea class="form-control" @bind-Value="listing.Description" />
+        </div>
+
+        <div class="mb-2">
+            <label>Price</label>
+            <InputNumber class="form-control" @bind-Value="listing.Price" />
+        </div>
+
+        <button class="btn btn-success" type="submit">Save</button>
+        <button class="btn btn-secondary" type="button" @onclick="Cancel">Cancel</button>
+    </EditForm>
+}
+
+@if (!string.IsNullOrEmpty(message))
+{
+    <div class="alert alert-danger mt-2">@message</div>
+}
+
+@code {
+    [Parameter] public Guid ListingId { get; set; }
+    private ListingResponseDto? listing;
+    private string message = "";
+
+    protected override async Task OnInitializedAsync()
+    {
+        var token = await AuthService.GetToken();
+        if (string.IsNullOrEmpty(token)) return;
+
+        Http.DefaultRequestHeaders.Authorization =
+            new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", token);
+
+        try
+        {
+            listing = await Http.GetFromJsonAsync<ListingResponseDto>($"api/listings/{ListingId}");
+        }
+        catch
+        {
+            message = "Failed to load listing.";
+        }
+    }
+
+    private async Task HandleEdit()
+    {
+        try
+        {
+            var token = await AuthService.GetToken();
+            if (string.IsNullOrEmpty(token)) return;
+
+            Http.DefaultRequestHeaders.Authorization =
+                new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", token);
+
+            var response = await Http.PutAsJsonAsync($"api/listings/{ListingId}", listing);
+            if (response.IsSuccessStatusCode)
+            {
+                Nav.NavigateTo("/profile");
+            }
+            else
+            {
+                message = "Failed to update listing.";
+            }
+        }
+        catch
+        {
+            message = "An error occurred while updating the listing.";
+        }
+    }
+
+    private void Cancel()
+    {
+        Nav.NavigateTo("/profile");
+    }
+}

@@ -46,9 +46,8 @@ else
                         <p class="card-text"><strong>Price:</strong> $@l.Price</p>
                         <div class="mt-auto d-flex justify-content-between">
                             <a class="btn btn-primary" href="/listing/@l.Id">View Details</a>
-                            <button class="btn btn-danger mt-auto" @onclick="() =>DeleteListing(l.Id)">
-                                Delete
-                            </button>
+                            <button class="btn btn-warning" @onclick="() => EditListing(l.Id)">Edit</button>
+                            <button class="btn btn-danger mt-auto" @onclick="() =>DeleteListing(l.Id)">Delete</button>
                         </div>
                     </div>
                 </div>
@@ -128,6 +127,11 @@ else
         {
             message = "An error occurred while deleting the listing.";
         }
+    }
+
+    private void EditListing(Guid listingId)
+    {
+        Nav.NavigateTo($"/listing/edit/{listingId}");
     }
 
     [Inject] private IJSRuntime JSRuntime { get; set; } = default!;
