@@ -1,22 +1,65 @@
 ﻿@page "/listing/{Id:guid}"
 @inject HttpClient Http
+@inject AuthenticationStateProvider AuthStateProvider
 @layout MainLayout
-
-<h3>Listing Details</h3>
 
 @if (listing == null)
 {
-    <p><em>Loading...</em></p>
+    <div class="d-flex justify-content-center align-items-center" style="height: 300px;">
+        <div class="spinner-border text-primary" role="status"></div>
+    </div>
 }
 else
 {
-    <div>
-        <img src="@listing.ImageUrl" alt="@listing.Title" width="300" />
-        <h4>@listing.Title</h4>
-        <p>@listing.Description</p>
-        <p>Price: $@listing.Price</p>
-        <p>Category: @listing.Category</p>
-        <p>Seller: @listing.UserName</p>
+    <div class="container mt-4">
+        <div class="row g-4">
+            <!-- Image Column -->
+            <div class="col-md-6">
+                <div class="position-relative">
+                    <img src="@listing.ImageUrl" class="img-fluid rounded shadow-sm" alt="@listing.Title" style="max-height:450px; object-fit:cover; width:100%;" />
+                    @if (listing.IsSold)
+                    {
+                        <span class="position-absolute top-0 start-0 m-2 badge bg-secondary fs-6 px-3 py-2">
+                            SOLD
+                        </span>
+                    }
+                </div>
+            </div>
+
+            <!-- Details Column -->
+            <div class="col-md-6">
+                <div class="card shadow-sm border-0">
+                    <div class="card-body">
+                        <h2 class="card-title mb-3">@listing.Title</h2>
+                        <p class="fs-5 text-success fw-bold mb-3">$@listing.Price</p>
+                        <p class="card-text mb-3">@listing.Description</p>
+
+                        <ul class="list-unstyled mb-4">
+                            <li><strong>Category:</strong> @listing.Category</li>
+                            <li><strong>Seller:</strong> @listing.UserName</li>
+                            <li><small class="text-muted">Posted: @listing.CreatedAt.ToLocalTime().ToString("g")</small></li>
+                        </ul>
+
+                        @if (listing.IsSold)
+                        {
+                            <div class="alert alert-warning">
+                                This item has been sold and is no longer available.
+                            </div>
+                        }
+                        else if (isOwner)
+                        {
+                            <div class="alert alert-info">
+                                This is your listing.
+                            </div>
+                        }
+                        else
+                        {
+                            <button class="btn btn-primary btn-lg">Contact Seller</button>
+                        }
+                    </div>
+                </div>
+            </div>
+        </div>
     </div>
 }
 
@@ -25,9 +68,25 @@ else
     public Guid Id { get; set; }
 
     private ListingResponseDto? listing;
+    private bool isOwner;
 
     protected override async Task OnInitializedAsync()
     {
+        // Get listing details
         listing = await Http.GetFromJsonAsync<ListingResponseDto>($"api/listings/{Id}");
+
+        // Get current user
+        var authState = await AuthStateProvider.GetAuthenticationStateAsync();
+        var user = authState.User;
+
+        // Compare current user to listing owner
+        if (listing != null && user.Identity?.IsAuthenticated == true)
+        {
+            var userIdClaim = user.FindFirst("sub")?.Value ?? user.FindFirst("id")?.Value;
+            if (Guid.TryParse(userIdClaim, out var currentUserId))
+            {
+                isOwner = currentUserId == listing.UserId;
+            }
+        }
     }
 }

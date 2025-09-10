@@ -6,7 +6,9 @@
 
 @if (listings == null)
 {
-    <p><em>Loading listings...</em></p>
+    <div class="d-flex justify-content-center align-items-center" style="height: 300px;">
+        <div class="spinner-border text-primary" role="status"></div>
+    </div>
 }
 else if (listings.Count == 0)
 {
