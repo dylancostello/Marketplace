@@ -185,6 +185,30 @@ namespace MarketplaceAPI.Controllers
             return listings;
         }
 
+        [HttpGet("active")]
+        public async Task<ActionResult<IEnumerable<ListingResponseDto>>> GetActiveListings()
+        {
+
+            var listings = await _context.Listings
+                .Where(l => !l.IsSold)
+                .Select(l => new ListingResponseDto
+                {
+                    Id = l.Id,
+                    Title = l.Title,
+                    Description = l.Description,
+                    Price = l.Price,
+                    Category = l.Category,
+                    ImageUrl = l.ImageUrl,
+                    CreatedAt = l.CreatedAt,
+                    IsSold = l.IsSold,
+                    UserId = l.UserId,
+                    UserName = l.User.UserName
+                })
+                .ToListAsync();
+
+            return listings;
+        }
+
         [HttpPatch("{id}/toggle-sold")]
         public async Task<IActionResult> ToggleSold(Guid id)
         {

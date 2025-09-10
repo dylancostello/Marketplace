@@ -38,12 +38,20 @@ else
         @foreach (var l in listings)
         {
             <div class="col">
-                <div class="card h-100 shadow-sm border-secondary">
-                    <!-- Fade the image if sold -->
+                <div class="card h-100 shadow-sm border-secondary position-relative">
+                    <!-- Image -->
                     <img src="@l.ImageUrl"
                          class="card-img-top @(l.IsSold ? "opacity-25" : "")"
                          alt="@l.Title"
                          style="height:200px; object-fit:cover;" />
+
+                    <!-- SOLD badge overlay -->
+                    @if (l.IsSold)
+                    {
+                        <div class="sold-overlay">
+                            SOLD
+                        </div>
+                    }
 
                     <div class="card-body d-flex flex-column">
                         <!-- Fade only text content if sold -->

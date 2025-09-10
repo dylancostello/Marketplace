@@ -30,3 +30,17 @@ h1:focus {
     .blazor-error-boundary::after {
         content: "An error has occurred."
     }
+
+.sold-overlay {
+    position: absolute;
+    top: 10px;
+    left: 10px;
+    background: rgba(220, 53, 69, 0.9); /* Bootstrap danger red with transparency */
+    color: white;
+    font-weight: bold;
+    padding: 5px 10px;
+    border-radius: 6px;
+    font-size: 1rem;
+    z-index: 10;
+    text-transform: uppercase;
+}

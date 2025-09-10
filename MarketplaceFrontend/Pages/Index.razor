@@ -38,6 +38,6 @@ else
 
     protected override async Task OnInitializedAsync()
     {
-        listings = await Http.GetFromJsonAsync<List<ListingResponseDto>>("api/listings");
+        listings = await Http.GetFromJsonAsync<List<ListingResponseDto>>("api/listings/active");
     }
 }
