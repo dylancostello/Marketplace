@@ -220,5 +220,57 @@ namespace MarketplaceAPI.Controllers
 
             return Ok(new { listing.Id, listing.IsSold });
         }
+
+        [HttpGet("search")]
+        public async Task<ActionResult<IEnumerable<ListingResponseDto>>> SearchListings([FromQuery] string q)
+        {
+            if (string.IsNullOrWhiteSpace(q))
+            {
+                // If query is empty, just return active listings
+                var all = await _context.Listings
+                    .Where(l => !l.IsSold)
+                    .Select(l => new ListingResponseDto
+                    {
+                        Id = l.Id,
+                        Title = l.Title,
+                        Description = l.Description,
+                        Price = l.Price,
+                        Category = l.Category,
+                        ImageUrl = l.ImageUrl,
+                        CreatedAt = l.CreatedAt,
+                        IsSold = l.IsSold,
+                        UserId = l.UserId,
+                        UserName = l.User.UserName
+                    })
+                    .ToListAsync();
+
+                return Ok(all);
+            }
+
+            var query = q.ToLower();
+
+            var results = await _context.Listings
+                .Where(l => !l.IsSold &&
+                            (l.Title.ToLower().Contains(query) ||
+                             l.Description.ToLower().Contains(query) ||
+                             l.Category.ToLower().Contains(query)))
+                .Select(l => new ListingResponseDto
+                {
+                    Id = l.Id,
+                    Title = l.Title,
+                    Description = l.Description,
+                    Price = l.Price,
+                    Category = l.Category,
+                    ImageUrl = l.ImageUrl,
+                    CreatedAt = l.CreatedAt,
+                    IsSold = l.IsSold,
+                    UserId = l.UserId,
+                    UserName = l.User.UserName
+                })
+                .ToListAsync();
+
+            return Ok(results);
+        }
+
     }
 }
