@@ -10,7 +10,15 @@
         <input class="form-control"
                placeholder="Search listings..."
                @bind="searchTerm"
-               @bind:event="oninput" />
+               @bind:event="oninput" 
+               @onkeydown="HandleKeyDown" />
+
+        @if (!string.IsNullOrWhiteSpace(searchTerm))
+        {
+            <button class="btn btn-secondary" @onclick="ClearSearch">
+                <i class="bi bi-x-lg"></i> Clear
+            </button>
+        }
 
         <button class="btn btn-primary" @onclick="PerformSearch">
             <i class="bi bi-search"></i> Search
@@ -75,5 +83,19 @@
 
         listings = await Http.GetFromJsonAsync<List<ListingResponseDto>>(
             $"api/listings/search?q={Uri.EscapeDataString(searchTerm)}");
+    }
+
+    private async Task ClearSearch()
+    {
+        searchTerm = string.Empty;
+        await LoadListings();
+    }
+
+    private async Task HandleKeyDown(KeyboardEventArgs e)
+    {
+        if (e.Key == "Enter")
+        {
+            await PerformSearch();
+        }
     }
 }
