@@ -186,11 +186,25 @@ namespace MarketplaceAPI.Controllers
         }
 
         [HttpGet("active")]
-        public async Task<ActionResult<IEnumerable<ListingResponseDto>>> GetActiveListings()
+        public async Task<ActionResult<IEnumerable<ListingResponseDto>>> GetActiveListings(
+    [FromQuery] string? category,
+    [FromQuery] decimal? minPrice,
+    [FromQuery] decimal? maxPrice)
         {
-
-            var listings = await _context.Listings
+            var query = _context.Listings
                 .Where(l => !l.IsSold)
+                .AsQueryable();
+
+            if (!string.IsNullOrEmpty(category))
+                query = query.Where(l => l.Category == category);
+
+            if (minPrice.HasValue)
+                query = query.Where(l => l.Price >= minPrice.Value);
+
+            if (maxPrice.HasValue)
+                query = query.Where(l => l.Price <= maxPrice.Value);
+
+            var listings = await query
                 .Select(l => new ListingResponseDto
                 {
                     Id = l.Id,
@@ -206,7 +220,7 @@ namespace MarketplaceAPI.Controllers
                 })
                 .ToListAsync();
 
-            return listings;
+            return Ok(listings);
         }
 
         [HttpPatch("{id}/toggle-sold")]
